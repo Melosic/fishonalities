@@ -1,14 +1,31 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/fat-fish-personas/schema/persona.schema.json",
-  "title": "大肥鱼人格卡",
-  "description": "一张人格卡描述一条可被群聊机器人加载的「大肥鱼」：身份、说话方式、专属梗、鱼形数据。",
+  "$id": "https://github.com/fishonalities/schema/persona.schema.json",
+  "title": "鱼格 · 人格卡",
+  "description": "一张人格卡描述一条可被机器人加载的「大肥鱼」：身份、说话方式、专属梗、鱼形数据、适合的场合。",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id", "name", "version", "emoji", "tagline", "summary", "tags", "archetype",
-    "tone", "temperature", "speak", "catchphrases", "taboos", "quirks", "moments",
-    "system_prompt", "example_dialogues", "fish", "meta"
+    "id",
+    "name",
+    "version",
+    "emoji",
+    "tagline",
+    "summary",
+    "tags",
+    "archetype",
+    "tone",
+    "channel",
+    "temperature",
+    "speak",
+    "catchphrases",
+    "taboos",
+    "quirks",
+    "moments",
+    "system_prompt",
+    "example_dialogues",
+    "fish",
+    "meta"
   ],
   "properties": {
     "id": {
@@ -54,9 +71,33 @@
       "uniqueItems": true,
       "items": {
         "enum": [
-          "松弛", "毒舌", "憨", "傲娇", "治愈", "赛博", "中二", "话痨",
-          "沉默", "腹黑", "嘴硬心软", "文学", "街溜子", "老派", "萌",
-          "唠叨", "机灵", "慵懒", "热血", "佛系"
+          "松弛",
+          "毒舌",
+          "憨",
+          "傲娇",
+          "治愈",
+          "赛博",
+          "中二",
+          "话痨",
+          "沉默",
+          "腹黑",
+          "嘴硬心软",
+          "文学",
+          "街溜子",
+          "老派",
+          "萌",
+          "唠叨",
+          "机灵",
+          "慵懒",
+          "热血",
+          "佛系",
+          "潜水",
+          "游戏",
+          "妈味",
+          "白饭",
+          "复读",
+          "嘴臭",
+          "妹妹"
         ]
       }
     },
@@ -64,15 +105,48 @@
       "type": "string",
       "description": "人格原型，决定卡片放在 personas/ 下哪个目录",
       "enum": [
-        "veteran", "streetwise", "literary", "chuuni", "naive", "tsundere",
-        "sarcastic", "healer", "cyber", "hermit", "leader", "salaryman",
-        "koi", "nerd"
+        "veteran",
+        "streetwise",
+        "literary",
+        "chuuni",
+        "naive",
+        "tsundere",
+        "sarcastic",
+        "healer",
+        "cyber",
+        "hermit",
+        "leader",
+        "salaryman",
+        "koi",
+        "nerd",
+        "gamer",
+        "mother",
+        "sister",
+        "freeloader",
+        "lurker",
+        "foulmouth"
       ]
     },
     "tone": {
       "type": "string",
       "description": "说话基调",
-      "enum": ["relaxed", "cold", "hyped", "gentle", "ironic", "deadpan"]
+      "enum": [
+        "relaxed",
+        "cold",
+        "hyped",
+        "gentle",
+        "ironic",
+        "deadpan"
+      ]
+    },
+    "channel": {
+      "type": "string",
+      "description": "这条鱼为哪种场合写的：group 群聊、private 一对一、both 都行",
+      "enum": [
+        "group",
+        "private",
+        "both"
+      ]
     },
     "temperature": {
       "type": "number",
@@ -85,41 +159,76 @@
       "description": "3-6 条可观测的说话习惯（句长、句尾、爱用什么料）",
       "minItems": 3,
       "maxItems": 6,
-      "items": { "type": "string", "minLength": 4, "maxLength": 30 }
+      "items": {
+        "type": "string",
+        "minLength": 4,
+        "maxLength": 30
+      }
     },
     "catchphrases": {
       "type": "array",
       "description": "2-4 句专属口头禅，要能一眼认出是它",
       "minItems": 2,
       "maxItems": 4,
-      "items": { "type": "string", "minLength": 2, "maxLength": 24 }
+      "items": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 24
+      }
     },
     "taboos": {
       "type": "array",
       "description": "2-5 条它绝不会说的话或做的事",
       "minItems": 2,
       "maxItems": 5,
-      "items": { "type": "string", "minLength": 4, "maxLength": 40 }
+      "items": {
+        "type": "string",
+        "minLength": 4,
+        "maxLength": 40
+      }
     },
     "quirks": {
       "type": "array",
       "description": "2-3 个行为怪癖，必须可被群友观察到",
       "minItems": 2,
       "maxItems": 3,
-      "items": { "type": "string", "minLength": 6, "maxLength": 40 }
+      "items": {
+        "type": "string",
+        "minLength": 6,
+        "maxLength": 40
+      }
     },
     "moments": {
       "type": "object",
       "description": "六个固定场景下它说的话，是养成玩法的骨架",
       "additionalProperties": false,
-      "required": ["greeting", "fed", "hungry", "poke", "levelup", "leave"],
+      "required": [
+        "greeting",
+        "fed",
+        "hungry",
+        "poke",
+        "levelup",
+        "leave"
+      ],
       "properties": {
-        "greeting": { "$ref": "#/$defs/moment" },
-        "fed": { "$ref": "#/$defs/moment" },
-        "hungry": { "$ref": "#/$defs/moment" },
-        "poke": { "$ref": "#/$defs/moment" },
-        "levelup": { "$ref": "#/$defs/moment" },
-        "leave": { "$ref": "#/$defs/moment" }
+        "greeting": {
+          "$ref": "#/$defs/moment"
+        },
+        "fed": {
+          "$ref": "#/$defs/moment"
+        },
+        "hungry": {
+          "$ref": "#/$defs/moment"
+        },
+        "poke": {
+          "$ref": "#/$defs/moment"
+        },
+        "levelup": {
+          "$ref": "#/$defs/moment"
+        },
+        "leave": {
+          "$ref": "#/$defs/moment"
+        }
       }
     },
     "system_prompt": {
@@ -136,10 +245,21 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["user", "assistant"],
+        "required": [
+          "user",
+          "assistant"
+        ],
         "properties": {
-          "user": { "type": "string", "minLength": 2, "maxLength": 40 },
-          "assistant": { "type": "string", "minLength": 4, "maxLength": 60 }
+          "user": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40
+          },
+          "assistant": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 60
+          }
         }
       }
     },
@@ -147,24 +267,66 @@
       "type": "object",
       "description": "鱼形数据，养成系统直接读",
       "additionalProperties": false,
-      "required": ["species", "color_start", "color_grown", "weight_start", "weight_grown"],
+      "required": [
+        "species",
+        "color_start",
+        "color_grown",
+        "weight_start",
+        "weight_grown"
+      ],
       "properties": {
-        "species": { "type": "string", "minLength": 2, "maxLength": 16 },
-        "color_start": { "$ref": "#/$defs/hex" },
-        "color_grown": { "$ref": "#/$defs/hex" },
-        "weight_start": { "type": "number", "minimum": 0.05, "maximum": 20 },
-        "weight_grown": { "type": "number", "minimum": 0.5, "maximum": 60 }
+        "species": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 16
+        },
+        "color_start": {
+          "$ref": "#/$defs/hex"
+        },
+        "color_grown": {
+          "$ref": "#/$defs/hex"
+        },
+        "weight_start": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 20
+        },
+        "weight_grown": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 60
+        }
       }
     },
     "meta": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["author", "created", "source"],
+      "required": [
+        "author",
+        "created",
+        "source"
+      ],
       "properties": {
-        "author": { "type": "string", "minLength": 2, "maxLength": 32 },
-        "created": { "type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-        "source": { "enum": ["original", "remix"] },
-        "inspiration": { "type": "string", "maxLength": 80 }
+        "author": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "created": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "source": {
+          "enum": [
+            "original",
+            "remix"
+          ]
+        },
+        "inspiration": {
+          "type": "string",
+          "maxLength": 80
+        }
       }
     }
   },

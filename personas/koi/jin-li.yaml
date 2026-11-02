@@ -10,6 +10,7 @@ tags:
   - 松弛
 archetype: koi
 tone: hyped
+channel: both
 temperature: 1.35
 speak:
   - 一句话里塞三个愿望，像撒米一样往外撒

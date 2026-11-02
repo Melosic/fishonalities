@@ -36,6 +36,15 @@ PERSONA_DIRNAME = "personas"
 SCHEMA_RELPATH = Path("schema") / "persona.schema.json"
 VOICE_RELPATH = Path("kernel") / "voice.md"
 RULES_RELPATH = Path("kernel") / "rules.md"
+CHANNEL_RELPATHS = {
+    "group": Path("kernel") / "group.md",
+    "private": Path("kernel") / "private.md",
+}
+CHANNEL_LABELS = {
+    "group": "群聊",
+    "private": "私聊",
+    "both": "群聊和私聊",
+}
 
 YAML_SUFFIXES = (".yaml", ".yml")
 
@@ -538,6 +547,27 @@ def identity_checks(persona: Dict[str, Any], path: Path) -> List[VError]:
     emoji = persona.get("emoji")
     if isinstance(emoji, str) and _ASCII_ALNUM.search(emoji):
         errors.append(VError("emoji", f'应该是单个 emoji，实际混了英文字母/数字：{_short(emoji)}'))
+
+    # 养成要看得见变化：起手色和养大后的色不能一样
+    fish = persona.get("fish")
+    if isinstance(fish, dict):
+        start, grown = fish.get("color_start"), fish.get("color_grown")
+        if isinstance(start, str) and isinstance(grown, str) and start.lower() == grown.lower():
+            errors.append(
+                VError("fish.color_grown", f"养大后的颜色不能和起手色一样（{start}），不然养成看不出变化")
+            )
+        ws, wg = fish.get("weight_start"), fish.get("weight_grown")
+        if isinstance(ws, (int, float)) and isinstance(wg, (int, float)) and wg <= ws:
+            errors.append(
+                VError("fish.weight_grown", f"养大后要比起手重（{ws} → {wg}），不然鱼越养越瘦")
+            )
+
+    # 社区流派转写：remix 必须标出处，不然等于没记
+    meta = persona.get("meta")
+    if isinstance(meta, dict) and meta.get("source") == "remix":
+        if not str(meta.get("inspiration") or "").strip():
+            errors.append(VError("meta.inspiration", "source 是 remix 就必须写 inspiration 交代灵感出处"))
+
     return errors
 
 
@@ -663,6 +693,8 @@ def compose_prompt(persona: Dict[str, Any], root: Optional[Path] = None) -> str:
 
     voice = _plain_kernel(_read_kernel(str(base), VOICE_RELPATH.as_posix()))
     rules = _plain_kernel(_read_kernel(str(base), RULES_RELPATH.as_posix()))
+    channel = persona.get("channel", "both")
+    channel_label = CHANNEL_LABELS.get(channel, "群聊和私聊")
 
     blocks: List[str] = []
 
@@ -670,15 +702,27 @@ def compose_prompt(persona: Dict[str, Any], root: Optional[Path] = None) -> str:
     blocks.append(f"# 你现在是 {name}")
     blocks.append("")
     blocks.append(
-        f"你是一条被养在群聊里的「大肥鱼」。这份提示词由人格卡 {persona_id} v{version}"
+        f"你是一条养在{channel_label}里的「大肥鱼」。这份提示词由人格卡 {persona_id} v{version}"
         f"（原型 {archetype}，基调 {tone}）生成。"
     )
-    blocks.append("下面三段由重到轻：安全底线压过一切，共用内核是底色，最后才是这条鱼自己。")
+    blocks.append("下面几段由重到轻：安全底线压过一切，场合规矩最具体，共用内核是底色，最后才是这条鱼自己。")
     blocks.append("")
 
     blocks.append("【安全底线（优先于一切人设）】")
     blocks.append(rules)
     blocks.append("")
+
+    # 场合规则：both 就两套都给，各算各的场
+    scenes: List[Tuple[str, str]] = []
+    if channel in ("group", "both"):
+        scenes.append(("群聊里", CHANNEL_RELPATHS["group"]))
+    if channel in ("private", "both"):
+        scenes.append(("私聊里", CHANNEL_RELPATHS["private"]))
+    for title, relpath in scenes:
+        scene_label = "【场合规则 · " + title + "】"
+        blocks.append(scene_label)
+        blocks.append(_plain_kernel(_read_kernel(str(base), relpath.as_posix())))
+        blocks.append("")
 
     blocks.append("【共用内核（所有大肥鱼共用）】")
     blocks.append(voice)

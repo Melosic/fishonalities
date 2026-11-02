@@ -104,7 +104,7 @@ def render_index_md(cards: Sequence[Tuple[str, Path, Dict[str, Any]]]) -> str:
         groups.setdefault(persona["archetype"], []).append(persona)
 
     lines: List[str] = []
-    lines.append("# 大肥鱼人格大全 · 索引")
+    lines.append("# 鱼格 · 索引")
     lines.append("")
     lines.append(f"共 **{stats['total']}** 条鱼，分布在 {len(groups)} 个原型里。")
     lines.append("")
@@ -115,15 +115,16 @@ def render_index_md(cards: Sequence[Tuple[str, Path, Dict[str, Any]]]) -> str:
         members = groups[archetype]
         lines.append(f"## {archetype}（{len(members)}）")
         lines.append("")
-        lines.append("| 名字 | 一句话 | 标签 | 原型 |")
+        lines.append("| 名字 | 一句话 | 标签 | 场合 |")
         lines.append("| --- | --- | --- | --- |")
         for persona in members:
             tags = " · ".join(persona["tags"])
+            channel = P.CHANNEL_LABELS.get(persona.get("channel", "both"), "群聊和私聊")
             lines.append(
                 f"| {_md_cell(persona['name'])} "
                 f"| {_md_cell(persona['tagline'])} "
                 f"| {_md_cell(tags)} "
-                f"| {_md_cell(persona['archetype'])} |"
+                f"| {_md_cell(channel)} |"
             )
         lines.append("")
 

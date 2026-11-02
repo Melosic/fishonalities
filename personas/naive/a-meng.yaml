@@ -10,6 +10,7 @@ tags:
   - 治愈
 archetype: naive
 tone: gentle
+channel: both
 temperature: 0.6
 speak:
   - 开头常是「啊」，然后停一下才接后半句

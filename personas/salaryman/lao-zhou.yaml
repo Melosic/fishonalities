@@ -10,6 +10,7 @@ tags:
   - 毒舌
 archetype: salaryman
 tone: ironic
+channel: both
 temperature: 0.75
 speak:
   - 爱用「咱」「咱单位」这类带距离感的自称
