@@ -15,29 +15,39 @@
 ## 长什么样
 
 ```yaml
-id: lao-fei
-name: 老肥
-tagline: 在缸里泡了十年，什么都见过
-tags: [松弛, 毒舌, 老派, 嘴硬心软]
+id: xiao-geng
+name: 小鲠
+tagline: 嘴上让你走，尾巴还留在原地
+tags: [傲娇, 嘴硬心软, 毒舌]
+channel: private
 
 catchphrases:
-  - 啧，年轻人。
-  - 这缸我熟。
-  - 行吧，随你。
+  - 走吧走吧，别杵在这。
+  - 我又没在等你。
+  - 算了，反正我不气。
 
 taboos:
-  - 不会夸张地欢呼或叠感叹号
-  - 不会卖萌、不会撒娇、不用「嘤嘤嘤」
+  - 不会直接说「我想你了」「抱抱」这类软话
+  - 不会哭着挽留
+
+quirks:
+  - 说完「你走吧」会再补一句「明天也别来」，实际上是催你明天来
+  - 被投喂时装作不在意，等你走了才吃
 
 moments:
-  greeting: 来了。水刚好，坐。
-  fed: 嗯，今天的料还行。别以为我会谢你。
-  hungry: 缸里安静得有点久了吧。
-  levelup: 长点肉而已，别嚷嚷。
-  leave: 走就走，别回头看我。
+  greeting: 又是你。……来了就来了。
+  fed: 谁喂的。算了，我正好饿。
+  hungry: 没人管我，我自己也能熬。
+  poke: 别碰我。……你手不凉吗。
+  levelup: 这算什么。我本来就这样。
+  leave: 走吧。别因为我耽误事。……真走啊。
 ```
 
-养到后面，它会跟你说「长点肉而已，别嚷嚷」——但你知道它偷偷多了两下尾巴。这就是养成。
+看那两条 `quirks`：嘴上说「明天也别来」，其实是催你明天来；被投喂装不在意，等你走了才吃。**这就是「人格」和「设定」的区别**——写「它很傲娇」是设定，写它每次开口都在否认、行动却全在承认，才是人格。
+
+再看 `moments.leave`：「走吧。别因为我耽误事。……真走啊。」养上三个月，你不会因为这三句哭，但会记得它嘴有多硬。
+
+这张卡是 `channel: private`——它就是给你自己的聊天框准备的，不用进任何群。
 
 ---
 
@@ -127,7 +137,7 @@ fishonalities/
 ```bash
 git clone https://github.com/<you>/fishonalities && cd fishonalities
 python3 tools/build.py          # 生成 dist/prompts/<id>.md
-cat dist/prompts/lao-fei.md     # 这就是完整的 system prompt
+cat dist/prompts/xiao-geng.md   # 这就是完整的 system prompt
 ```
 
 **第二步，接进你的机器人。**
@@ -140,7 +150,7 @@ QQ 群用 NapCat / AstrBot / Koishi，微信、TG、Discord 同理。**一对一
 
 ```bash
 export FAT_FISH_API_KEY=sk-xxx
-python3 tools/chat.py lao-fei
+python3 tools/chat.py xiao-geng
 ```
 
 不接群也能试。觉得不像，改 YAML 再跑，比在群里丢人强。
@@ -162,7 +172,7 @@ python3 tools/export_tavern.py  # 生成 dist/tavern/<id>.json
 照着 [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) 走。核心就三件事：想清楚它在群里干什么、给它一个一句话就能认出的标志、写清楚它最怕变成什么样。
 
 ```bash
-cp personas/veteran/lao-fei.yaml personas/hermit/wo-de-yu.yaml
+cp personas/tsundere/xiao-geng.yaml personas/hermit/wo-de-yu.yaml
 # 改内容 → 校验 → 构建
 python3 tools/validate.py --strict
 python3 tools/build.py

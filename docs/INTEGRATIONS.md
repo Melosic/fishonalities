@@ -11,7 +11,7 @@
 ```python
 import openai, pathlib
 
-system = pathlib.Path("dist/prompts/lao-fei.md").read_text()
+system = pathlib.Path("dist/prompts/xiao-geng.md").read_text()
 client = openai.OpenAI(api_key=..., base_url=...)
 
 # 群聊里每来一条消息，带上最近 N 条上下文

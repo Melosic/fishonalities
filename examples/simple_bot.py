@@ -9,7 +9,7 @@
 
 用法：
     export FAT_FISH_API_KEY=sk-xxx
-    python3 examples/simple_bot.py lao-fei
+    python3 examples/simple_bot.py gou-dan
 
 生产环境请换成真正的平台适配（NapCat / AstrBot / telegram-bot 等），
 这个脚本只负责演示「接法和参数怎么定」。
