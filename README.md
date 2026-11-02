@@ -1,5 +1,10 @@
 # 🐟 鱼格 · fishonalities
 
+[![CI](https://github.com/Melosic/fishonalities/actions/workflows/ci.yml/badge.svg)](https://github.com/Melosic/fishonalities/actions/workflows/ci.yml)
+[![人格卡](https://img.shields.io/badge/%E4%BA%BA%E6%A0%BC%E5%8D%A1-20%20%E6%9D%A1-2ea44f)](personas)
+[![License: MIT](https://img.shields.io/badge/code-MIT-blue)](LICENSE)
+[![内容许可](https://img.shields.io/badge/content-CC%20BY--SA%204.0-lightgrey)](LICENSE-CONTENT)
+
 > 鱼的人格，也是鱼的格调。一群有性格的鱼，等你养在群里，或者只养在你自己的聊天框里。
 
 **fishonalities** = fish + personalities。中文叫**鱼格**。
