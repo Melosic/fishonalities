@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/fishonalities/schema/persona.schema.json",
+  "$id": "https://github.com/Melosic/fishonalities/schema/persona.schema.json",
   "title": "鱼格 · 人格卡",
   "description": "一张人格卡描述一条可被机器人加载的「大肥鱼」：身份、说话方式、专属梗、鱼形数据、适合的场合。",
   "type": "object",

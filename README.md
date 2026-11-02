@@ -135,7 +135,7 @@ fishonalities/
 **第一步，拿一条鱼。**
 
 ```bash
-git clone https://github.com/<you>/fishonalities && cd fishonalities
+git clone git@github.com:Melosic/fishonalities.git && cd fishonalities
 python3 tools/build.py          # 生成 dist/prompts/<id>.md
 cat dist/prompts/xiao-geng.md   # 这就是完整的 system prompt
 ```
