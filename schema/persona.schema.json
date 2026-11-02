@@ -200,7 +200,7 @@
     },
     "moments": {
       "type": "object",
-      "description": "六个固定场景下它说的话，是养成玩法的骨架",
+      "description": "六个固定场景下它会说的一句话。不是必答的指令表，是给它一个在具体情境里开口的样子",
       "additionalProperties": false,
       "required": [
         "greeting",
@@ -265,7 +265,7 @@
     },
     "fish": {
       "type": "object",
-      "description": "鱼形数据，养成系统直接读",
+      "description": "它这条鱼长什么样：品种、颜色、体重。画头像、做状态卡时用",
       "additionalProperties": false,
       "required": [
         "species",

@@ -46,6 +46,13 @@ CHANNEL_LABELS = {
     "both": "群聊和私聊",
 }
 
+
+def _other_label(persona: Dict[str, Any]) -> str:
+    """对面那个人怎么称呼。群聊里是「群友」，一对一的场合就是「对方」。"""
+    raw = persona.get("channel")
+    channel = getattr(raw, "data", raw)
+    return "群友" if channel == "group" else "对方"
+
 YAML_SUFFIXES = (".yaml", ".yml")
 
 
@@ -548,18 +555,18 @@ def identity_checks(persona: Dict[str, Any], path: Path) -> List[VError]:
     if isinstance(emoji, str) and _ASCII_ALNUM.search(emoji):
         errors.append(VError("emoji", f'应该是单个 emoji，实际混了英文字母/数字：{_short(emoji)}'))
 
-    # 养成要看得见变化：起手色和养大后的色不能一样
+    # 状态卡要看得见差别：起手色和长成后的色不能一样
     fish = persona.get("fish")
     if isinstance(fish, dict):
         start, grown = fish.get("color_start"), fish.get("color_grown")
         if isinstance(start, str) and isinstance(grown, str) and start.lower() == grown.lower():
             errors.append(
-                VError("fish.color_grown", f"养大后的颜色不能和起手色一样（{start}），不然养成看不出变化")
+                VError("fish.color_grown", f"长成后的颜色不能和起手色一样（{start}），不然状态卡上看不出变化")
             )
         ws, wg = fish.get("weight_start"), fish.get("weight_grown")
         if isinstance(ws, (int, float)) and isinstance(wg, (int, float)) and wg <= ws:
             errors.append(
-                VError("fish.weight_grown", f"养大后要比起手重（{ws} → {wg}），不然鱼越养越瘦")
+                VError("fish.weight_grown", f"长成后要比起手重（{ws} → {wg}），不然鱼越养越瘦")
             )
 
     # 社区流派转写：remix 必须标出处，不然等于没记
@@ -752,7 +759,7 @@ def compose_prompt(persona: Dict[str, Any], root: Optional[Path] = None) -> str:
         blocks.append("")
 
     if persona.get("quirks"):
-        blocks.append("行为怪癖（可以被群友观察到的）：")
+        blocks.append(f"行为怪癖（可以被{_other_label(persona)}观察到的）：")
         blocks.extend(_bullet_list(persona["quirks"]))
         blocks.append("")
 
@@ -760,7 +767,7 @@ def compose_prompt(persona: Dict[str, Any], root: Optional[Path] = None) -> str:
     if dialogues:
         blocks.append("示例对话（学它的语气和长度，别照抄内容）：")
         for turn in dialogues:
-            blocks.append(f"群友：{turn['user']}")
+            blocks.append(f"{_other_label(persona)}：{turn['user']}")
             blocks.append(f"{name}：{turn['assistant']}")
         blocks.append("")
 

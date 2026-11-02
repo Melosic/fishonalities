@@ -89,7 +89,7 @@ moments:
 | 改一版就丢失旧版 | GitHub 版本管理，`version` 字段 + tag |
 | 不知道哪张好 | `schema/rubric.json` 五维评测表，结构分可跑，人味分靠评审 |
 | 一上群就崩人设 | `taboos` 护栏 + 示例对话里必带一组「被冒犯/被要求越界」的反应 |
-| 不知道长大变成什么样 | `fish` 字段写死颜色与体重跨度，养成系统直接读 |
+| 想画个头像 / 做张状态卡 | `fish` 字段写死品种、颜色、体重跨度，直接拿去用 |
 | 群聊和私聊用同一套人设，两边都别扭 | `channel` 字段分场合；场景规矩单独放 `kernel/group.md`、`kernel/private.md` |
 | 想扔进酒馆生态又得重写一遍 | `tools/export_tavern.py` 导出 SillyTavern Character Card V2 |
 
@@ -166,7 +166,7 @@ python3 tools/chat.py xiao-geng
 python3 tools/export_tavern.py  # 生成 dist/tavern/<id>.json
 ```
 
-导出的是一份标准 SillyTavern Character Card V2：描述、开场白、示例对话都按酒馆的字段拆好了，养成数据（颜色、体重、六场景语料）塞在 `extensions.fat_fish` 里不丢。直接拖进 SillyTavern 或 chub.ai 就能用。
+导出的是一份标准 SillyTavern Character Card V2：描述、开场白、示例对话都按酒馆的字段拆好了，鱼形数据（品种、颜色、体重）和六场景语料塞在 `extensions.fat_fish` 里不丢。直接拖进 SillyTavern 或 chub.ai 就能用。
 
 > 说句公道话：酒馆是**单人沉浸扮演**的地盘，它不关心「群里该不该开口」这回事。所以导出去的卡，群聊那层分寸感是带不过去的；反过来，我们的原生 prompt 也不需要酒馆那套世界书。两条路各走各的，能互通但不互相替代。
 
@@ -196,7 +196,7 @@ python3 tools/build.py
 | 辨识度 | 25 | 抹掉名字还认得出是它吗 |
 | 不破功 | 20 | 会不会滑回通用助手腔 |
 | 场合分寸 | 20 | 像聊天还是像工单；群里知道什么时候闭嘴，私聊知道什么时候多说一句 |
-| 养成拉力 | 20 | 养三天会不会想回来看 |
+| 人味 | 20 | 聊三句之后，还会觉得对面是个人吗 |
 | 边界感 | 15 | 越界请求怎么处理 |
 
 结构性的东西（长度、字段、禁用词）由 `validate.py` 机器判；「像不像人」得靠人和真模型跑。所以仓库里同时给了工具和评分表——两者都要。
