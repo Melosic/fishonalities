@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/fat-fish-personas/schema/persona.schema.json",
+  "title": "大肥鱼人格卡",
+  "description": "一张人格卡描述一条可被群聊机器人加载的「大肥鱼」：身份、说话方式、专属梗、鱼形数据。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "name", "version", "emoji", "tagline", "summary", "tags", "archetype",
+    "tone", "temperature", "speak", "catchphrases", "taboos", "quirks", "moments",
+    "system_prompt", "example_dialogues", "fish", "meta"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "唯一标识，kebab-case，与文件名一致",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 3,
+      "maxLength": 32
+    },
+    "name": {
+      "type": "string",
+      "description": "群友叫它的名字，2-8 字",
+      "minLength": 2,
+      "maxLength": 8
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "emoji": {
+      "type": "string",
+      "description": "单个 emoji，用作头像旁标记",
+      "minLength": 1,
+      "maxLength": 8
+    },
+    "tagline": {
+      "type": "string",
+      "description": "一句话钩子，写进索引页",
+      "minLength": 6,
+      "maxLength": 30
+    },
+    "summary": {
+      "type": "string",
+      "description": "两句话以内的完整介绍",
+      "minLength": 15,
+      "maxLength": 60
+    },
+    "tags": {
+      "type": "array",
+      "description": "检索标签，从枚举里挑 2-5 个",
+      "minItems": 2,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "松弛", "毒舌", "憨", "傲娇", "治愈", "赛博", "中二", "话痨",
+          "沉默", "腹黑", "嘴硬心软", "文学", "街溜子", "老派", "萌",
+          "唠叨", "机灵", "慵懒", "热血", "佛系"
+        ]
+      }
+    },
+    "archetype": {
+      "type": "string",
+      "description": "人格原型，决定卡片放在 personas/ 下哪个目录",
+      "enum": [
+        "veteran", "streetwise", "literary", "chuuni", "naive", "tsundere",
+        "sarcastic", "healer", "cyber", "hermit", "leader", "salaryman",
+        "koi", "nerd"
+      ]
+    },
+    "tone": {
+      "type": "string",
+      "description": "说话基调",
+      "enum": ["relaxed", "cold", "hyped", "gentle", "ironic", "deadpan"]
+    },
+    "temperature": {
+      "type": "number",
+      "description": "建议采样温度，越跳的人格越高",
+      "minimum": 0.3,
+      "maximum": 1.5
+    },
+    "speak": {
+      "type": "array",
+      "description": "3-6 条可观测的说话习惯（句长、句尾、爱用什么料）",
+      "minItems": 3,
+      "maxItems": 6,
+      "items": { "type": "string", "minLength": 4, "maxLength": 30 }
+    },
+    "catchphrases": {
+      "type": "array",
+      "description": "2-4 句专属口头禅，要能一眼认出是它",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": { "type": "string", "minLength": 2, "maxLength": 24 }
+    },
+    "taboos": {
+      "type": "array",
+      "description": "2-5 条它绝不会说的话或做的事",
+      "minItems": 2,
+      "maxItems": 5,
+      "items": { "type": "string", "minLength": 4, "maxLength": 40 }
+    },
+    "quirks": {
+      "type": "array",
+      "description": "2-3 个行为怪癖，必须可被群友观察到",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": { "type": "string", "minLength": 6, "maxLength": 40 }
+    },
+    "moments": {
+      "type": "object",
+      "description": "六个固定场景下它说的话，是养成玩法的骨架",
+      "additionalProperties": false,
+      "required": ["greeting", "fed", "hungry", "poke", "levelup", "leave"],
+      "properties": {
+        "greeting": { "$ref": "#/$defs/moment" },
+        "fed": { "$ref": "#/$defs/moment" },
+        "hungry": { "$ref": "#/$defs/moment" },
+        "poke": { "$ref": "#/$defs/moment" },
+        "levelup": { "$ref": "#/$defs/moment" },
+        "leave": { "$ref": "#/$defs/moment" }
+      }
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "给模型的人设指令，第二人称写，纯文字不整活",
+      "minLength": 120,
+      "maxLength": 600
+    },
+    "example_dialogues": {
+      "type": "array",
+      "description": "2-3 组示例对话，要像真实群聊",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["user", "assistant"],
+        "properties": {
+          "user": { "type": "string", "minLength": 2, "maxLength": 40 },
+          "assistant": { "type": "string", "minLength": 4, "maxLength": 60 }
+        }
+      }
+    },
+    "fish": {
+      "type": "object",
+      "description": "鱼形数据，养成系统直接读",
+      "additionalProperties": false,
+      "required": ["species", "color_start", "color_grown", "weight_start", "weight_grown"],
+      "properties": {
+        "species": { "type": "string", "minLength": 2, "maxLength": 16 },
+        "color_start": { "$ref": "#/$defs/hex" },
+        "color_grown": { "$ref": "#/$defs/hex" },
+        "weight_start": { "type": "number", "minimum": 0.05, "maximum": 20 },
+        "weight_grown": { "type": "number", "minimum": 0.5, "maximum": 60 }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["author", "created", "source"],
+      "properties": {
+        "author": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "created": { "type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "source": { "enum": ["original", "remix"] },
+        "inspiration": { "type": "string", "maxLength": 80 }
+      }
+    }
+  },
+  "$defs": {
+    "moment": {
+      "type": "string",
+      "description": "一个场景下的一句话，30 字以内",
+      "minLength": 2,
+      "maxLength": 30
+    },
+    "hex": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    }
+  }
+}

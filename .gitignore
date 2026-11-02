@@ -1,0 +1,14 @@
+# 忽略构建产物与本地环境
+dist/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+.env
+*.log
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
