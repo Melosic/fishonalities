@@ -16,6 +16,7 @@
 - `version` 从 `1.0.0` 开始。改到别人不认识了就升主版本。
 - `channel` 决定它被拼进哪套场合规矩：`group`（只用 kernel/group.md）、`private`（只用 kernel/private.md）、`both`（两套都给）。选之前先读那两份，别写一张「群聊卡」却设成 private。
 - `meta.source` 写 `remix` 时，`meta.inspiration` 必须填，交代灵感从哪来。`--strict` 会拦。
+- 借鉴社区流传的卡（比如 [COMMUNITY.md](../COMMUNITY.md) 里那 26 张）**只能提炼、不能搬运**：读它为什么有效，用自己的话重写成 900 字以内的 `system_prompt`，出处写进 `meta.inspiration`。整段复制别人的卡进仓库不行，那是别人的作品。
 
 ## 写作要求
 
