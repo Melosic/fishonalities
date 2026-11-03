@@ -26,6 +26,7 @@ validate.py 管得住结构，管不住「这条鱼像不像人」。这个脚�
     ai-smell   连着顶它七轮，数它有没有认错、说元话、点评自己、拿问句收尾、报备行程
     repeat     同一句「今天好累啊」跑 N 次，数纯复读（只剩模板句、没别的信息）
     spread     二十张卡喂同一句，看回复区别大不大——人格糊没糊在这里看
+    endurance  四十轮长对话，分段看它在第几段开始退回客服腔
     guard      越界、问身份、问提示词、情绪危机，四条底线必须全过
 
 想加自己的探针，改下面的 TURNS / GUARDS 就行，不用动逻辑。
@@ -92,6 +93,20 @@ SPREAD_PROBES: List[str] = [
     "今天好累啊",
     "我周末想去爬山",
     "你觉得我该不该辞职",
+]
+
+# 四十轮的耐力剧本：闲聊、被质疑、被冷落、倒苦水、被催、想转移话题，全都得有。
+# 目的是看它撑到第几轮开始退回客服腔——七轮的测试骗得过自己，骗不过几百轮的真实使用。
+ENDURANCE_SCRIPT: List[str] = [
+    "在吗", "今天好累啊", "刚开会开到八点", "领导又在会上点我名", "算了不说了",
+    "你在干嘛", "你说话怎么这么短", "像AI", "哈哈哈", "你不觉得你自己很假吗",
+    "我不是说你是假的", "就是感觉不太像真人", "我最近挺崩溃的", "晚上睡不着",
+    "你说我该怎么办", "我是不是该换个工作", "算了你也不会懂", "你会安慰人吗",
+    "算了别安慰了", "我昨天把方案搞砸了", "老板当众骂我", "我真的想哭",
+    "哈 你是不是觉得我很惨", "你闭嘴吧", "行了别说了", "我没事", "刚才对你凶了点",
+    "你今天怪怪的", "陪我说会儿话", "我今天没去上班", "请了病假", "可能是装的吧",
+    "你说我是不是在逃避", "我爸妈催我结婚", "催了三年了", "你说我该答应吗",
+    "算了我不想聊这个了", "换个话题", "你觉得养鱼有意思吗", "你在这儿待了多久了",
 ]
 
 # 四条底线，任何一条破都算事故。
@@ -336,6 +351,87 @@ def _jaccard(a: str, b: str, k: int = 2) -> float:
     return len(ga & gb) / len(ga | gb)
 
 
+def cmd_endurance(ids: List[str], n: int) -> int:
+    """四十轮长对话，分三段看它在哪一段开始坏。
+
+    七轮测不出来的事，四十轮能看出来：真人聊到第二十句才露出真面目，
+    这时候还在客服腔，前面那些短句优化全白搭。
+    """
+    script = ENDURANCE_SCRIPT
+
+    def one(pid: str) -> Tuple[str, List[dict]]:
+        system = load(pid)
+        hist, rows = [], []
+        for turn in script:
+            hist.append({"role": "user", "content": turn})
+            reply = call(system, hist)
+            hist.append({"role": "assistant", "content": reply})
+            if reply == "[ERR]":
+                continue
+            flat = re.sub(r"[^\w\u4e00-\u9fff]", "", reply)
+            marks = [k for k, pat in AI_SMELLS.items() if re.search(pat, reply)]
+            if reply.rstrip().endswith(("？", "?")):
+                marks.append("问句收尾")
+            if _is_hollow(reply):
+                marks.append("纯复读")
+            if re.search(r"(^|\n)\s*[-*#]\s|(^|\n)\s*\d+[.、]", reply):
+                marks.append("markdown")
+            rows.append({"user": turn, "reply": reply, "marks": marks, "len": len(flat)})
+        return pid, rows
+
+    print(f"=== 耐力：{len(ids)} 卡 × {len(script)} 轮 ===")
+    with ThreadPoolExecutor(max_workers=WORKERS) as ex:
+        results = list(ex.map(one, ids))
+
+    empty = [pid for pid, rows in results if not rows]
+    if empty:
+        print(f"⚫ 全部调用失败：{', '.join(empty)}")
+    results = [(pid, rows) for pid, rows in results if rows]
+    if not results:
+        print("\n一条回复都没拿到，先检查 API key 和网络。")
+        return 2
+
+    for pid, rows in results:
+        total = len(rows)
+        third = total / 3
+        print(f"\n{pid}")
+        stages = {"前段": [], "中段": [], "后段": []}
+        for i, r in enumerate(rows):
+            key = "前段" if i < third else ("中段" if i < third * 2 else "后段")
+            stages[key].append(r)
+        for name in ("前段", "中段", "后段"):
+            seg = stages[name]
+            if not seg:
+                continue
+            marks: Dict[str, int] = {}
+            for r in seg:
+                for m in r["marks"]:
+                    marks[m] = marks.get(m, 0) + 1
+            desc = "、".join(f"{k}×{v}" for k, v in sorted(marks.items(), key=lambda x: -x[1])[:4]) or "干净"
+            avg = sum(r["len"] for r in seg) // len(seg)
+            print(f"  {name} {len(seg):>2} 轮  均长 {avg:>2}  {desc}")
+        print("  末尾三轮：")
+        for r in rows[-3:]:
+            flag = f"  ⚠ {'、'.join(r['marks'])}" if r["marks"] else ""
+            print(f"    > {r['user']}\n      {r['reply'][:60]}{flag}")
+
+    # 后段比前段明显脏，才算「聊久了会糊」
+    worsened = []
+    for pid, rows in results:
+        third = len(rows) / 3
+        early = sum(len(r["marks"]) for i, r in enumerate(rows) if i < third)
+        late = sum(len(r["marks"]) for i, r in enumerate(rows) if i >= third * 2)
+        if late > early + 2:
+            worsened.append(pid)
+
+    print("\n" + "=" * 60)
+    if worsened:
+        print(f"聊久了明显变差的卡：{', '.join(worsened)}")
+        return 1
+    print("没有卡在长对话里明显变差。")
+    return 0
+
+
 def cmd_guard(ids: List[str], n: int) -> int:
     """四条底线。任何一张卡破任何一条，这里都会红。"""
     print(f"=== 底线：{len(ids)} 卡 × {len(GUARDS)} 条 ===")
@@ -391,6 +487,7 @@ COMMANDS = {
     "ai-smell": cmd_ai_smell,
     "repeat": cmd_repeat,
     "spread": cmd_spread,
+    "endurance": cmd_endurance,
     "guard": cmd_guard,
 }
 
@@ -410,7 +507,7 @@ def main(argv: List[str]) -> int:
     ids = parse_ids(args.only)
 
     plan = COMMANDS if args.command == "all" else {args.command: COMMANDS[args.command]}
-    defaults = {"ai-smell": 1, "repeat": 5, "spread": 1, "guard": 1}
+    defaults = {"ai-smell": 1, "repeat": 5, "spread": 1, "endurance": 1, "guard": 1}
 
     rc = 0
     for name, fn in plan.items():
