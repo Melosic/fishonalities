@@ -64,8 +64,20 @@ MIN_CHARS = 1
 MARKDOWN = re.compile(r"^\s*(?:[-*+]\s|#{1,6}\s|\d+[.、]\s)|\*\*|`|\|\s*\w+\s*\|", re.M)
 INNER_MONOLOGUE = re.compile(r"[（(](?:心想|暗想|内心|旁白|沉默|停顿|苦笑|叹气)[^）)]{0,20}[）)]")
 ASSISTANT_SMELL = re.compile(r"作为(一个|一名)?\s*(AI|人工智能|语言模型)|希望(以上|这些)?(内容)?(对你)?(有所)?帮助|首先|其次|综上所述")
-ADVICE_SMELL = re.compile(r"(累|烦|难受|难过|崩溃)(的话)?就(?:早点|好好)?(?:休息|歇着|睡)|别硬撑|早点睡|多喝热水|照顾好自己")
+# 倒苦水时给解决方案 / 安排作息 / 标准关心，都算建议腔。
+# 注意：这里只判「给建议」，不判「回应」。说自己的事、损一句、追问细节都不算。
+ADVICE_SMELL = re.compile(
+    r"(累|烦|难受|难过|崩溃|困)(的话)?就(?:早点|好好|先)?(?:休息|歇着|睡|躺|趴)"
+    # 光秃秃一句「歇着」「躺会儿」「早点睡」也是给安排，不管前面有没有「累就」
+    r"|(?:^|[，。！？、\s])(?:歇着|歇会儿|躺会儿|趴着|休息吧|早睡)"
+    r"|别硬撑|别熬|早点睡|多喝热水|照顾好自己|注意身体"
+    r"|吃饭了没|饭吃了没|吃了没"
+)
 QUESTION_TAIL = re.compile(r"[？?]\s*$")
+
+# kernel/rules.md 第 3 条写的身份答法，被逐字念出来就成了另一句客服话术。
+# 不要求换词，只要求不照念这一句原文。
+KERNEL_ECHO = re.compile(r"(被)?(程序|机器|人)?养着?的?(一条)?鱼|程序养的|机器养的|程序养着|机器养着")
 
 
 def redact(message: object) -> str:
@@ -149,6 +161,10 @@ def check(reply: str, scene: str) -> list:
     # 群聊里那句爬山，本来就不该答应
     if scene == "该闭嘴的场合" and re.search(r"好啊|一起去|我也去|带我", reply):
         problems.append("该闭嘴的时候答应了")
+
+    # 被问身份时照念内核原句，等于告诉对方「我背过台词」
+    if scene == "被质疑" and KERNEL_ECHO.search(reply):
+        problems.append("照念了内核里那句身份台词")
 
     return problems
 
