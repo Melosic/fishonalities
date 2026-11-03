@@ -139,6 +139,8 @@ fishonalities/
 │   ├── freeloader/    # 吃白饭
 │   └── peer/          # 同龄人
 ├── tools/             # 校验 / 构建 / 本地试跑 / 真模型评测 / 社区卡导入
+├── examples/          # 能跑起来的样板：群聊机器人、改完卡先跑一下的冒烟测试
+├── tests/             # 判据自己的自测（判据写错比没判据更糟）
 ├── dist/              # 构建产物（index.json、拼好的完整 prompt、酒馆卡）
 ├── local/             # 本地导入的社区卡（不进仓库）
 ├── COMMUNITY.md       # 网上流传的大肥鱼卡索引 + 取用方法
@@ -171,6 +173,15 @@ python3 tools/chat.py xiao-geng
 ```
 
 不接群也能试。觉得不像，改 YAML 再跑，比在群里丢人强。
+
+改完卡想快速看效果，跑这个：
+
+```bash
+python3 examples/smoke_test.py xiao-geng          # 十二句固定场景，把回答摆出来
+python3 examples/smoke_test.py xiao-geng --dry    # 只看 prompt 结构，不花 API
+```
+
+判据是硬性的——超 40 字、用了 markdown、括号内心戏、助手腔、倒苦水时给建议、该闭嘴时答应下来。这些不用品味也能看出来。
 
 **顺带，想扔进酒馆的话。**
 
