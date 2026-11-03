@@ -138,10 +138,11 @@ fishonalities/
 │   ├── sister/        # 妹妹型
 │   ├── freeloader/    # 吃白饭
 │   └── peer/          # 同龄人
-├── tools/             # 校验 / 构建 / 本地试跑 / 真模型评测 / 社区卡导入
+├── tools/             # 校验 / 构建 / 打包 / 本地试跑 / 真模型评测 / 社区卡导入
 ├── examples/          # 能跑起来的样板：群聊机器人、改完卡先跑一下的冒烟测试
 ├── tests/             # 判据自己的自测（判据写错比没判据更糟）
 ├── dist/              # 构建产物（index.json、拼好的完整 prompt、酒馆卡）
+├── out/               # pack.py 生成的「拷到手机就能用」文件夹（不进仓库）
 ├── local/             # 本地导入的社区卡（不进仓库）
 ├── COMMUNITY.md       # 网上流传的大肥鱼卡索引 + 取用方法
 └── docs/              # 写作规范、接入指南
@@ -155,9 +156,33 @@ fishonalities/
 
 ```bash
 git clone https://github.com/Melosic/fishonalities.git && cd fishonalities
-python3 tools/build.py          # 生成 dist/prompts/<id>.md
-cat dist/prompts/xiao-geng.md   # 这就是完整的 system prompt
+python3 tools/pack.py           # 生成 out/鱼格/，一个拷到手机就能用的文件夹
 ```
+
+打开 `out/鱼格/`，里面是这样：
+
+```
+out/鱼格/
+├── 先看这个.md          ← 怎么用、选哪条，一页说完
+├── 群聊用/              ← 8 条
+│   ├── 老肥·在缸里泡了十年，什么都见过.md
+│   └── ...
+├── 私聊用/              ← 6 条
+│   ├── 小鲠·嘴上让你走，尾巴还留在原地.md
+│   └── ...
+└── 都行/                ← 7 条
+```
+
+**文件名就是这条鱼是谁**，不用记英文 id。随便点开一个，全选复制，粘进模型的系统提示词那一栏，完事。
+
+想自己挑要哪些、或者只要某个场合的：
+
+```bash
+python3 tools/pack.py --channel private    # 只要私聊用的
+python3 tools/pack.py --out ~/下载/鱼格     # 换个地方放
+```
+
+> 只想看单独一份 prompt（不进文件夹）：`python3 tools/build.py` 生成 `dist/prompts/<id>.md`。
 
 **第二步，接进你的机器人。**
 

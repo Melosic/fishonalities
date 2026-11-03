@@ -6,6 +6,8 @@
     dist/prompts/<id>.md  每个 id 一份自包含 system prompt（compose_prompt 的结果）
     dist/INDEX.md         人类看的索引页，按原型分组
 
+想让 prompt 变成「拷到手机就能用」的文件夹，跑 tools/pack.py。
+
 有校验错误时拒绝构建，退出码 1。
 """
 

@@ -78,6 +78,26 @@ jobs:
       - name: 判据自测（不联网、不需要 key）
         run: python tests/test_smoke_judge.py
 
+      - name: 打包开箱文件夹
+        run: |
+          python tools/pack.py --out /tmp/pack
+          python - <<'EOF'
+          import pathlib, sys
+          base = pathlib.Path("/tmp/pack")
+          md = sorted(base.rglob("*.md"))
+          prompts = [p for p in md if p.name != "先看这个.md"]
+          readme = base / "先看这个.md"
+          if not readme.is_file():
+              print("缺 先看这个.md"); sys.exit(1)
+          if len(prompts) != 21:
+              print(f"应生成 21 份 prompt，实际 {len(prompts)}"); sys.exit(1)
+          # 文件名不该还是英文 id：至少一大半得带中文
+          cn = sum(1 for p in prompts if any("\u4e00" <= c <= "\u9fff" for c in p.name))
+          if cn < len(prompts):
+              print(f"有 {len(prompts)-cn} 个文件名还是英文 id"); sys.exit(1)
+          print(f"开箱包 {len(prompts)} 份 prompt，文件名全是中文")
+          EOF
+
       - name: 探针脚本能跑（不打真 API，只确认可执行）
         run: |
           python tools/probe.py --help > /dev/null
