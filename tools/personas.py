@@ -581,6 +581,15 @@ def identity_checks(persona: Dict[str, Any], path: Path) -> List[VError]:
 # 内核里写死的几条禁令，卡里不能再教相反的动作。
 # 之前 a-meng 就是这么破的：内核说「别拿问句收尾」，
 # 卡里写着「句尾爱加是这样吗对不对」——两套规矩对着干，模型只好二选一。
+# 每张卡的 system_prompt 都该交代「别人倒苦水时它干什么」。
+# 缺了这一段，模型就会退回自己的语言先验（「累就早点睡」），
+# 二十条鱼在同一种处境里说同一句话，人格就糊了。
+# 这条判据不查写法，只查「有没有为这个处境留一个出口」。
+VENTING_HINTS = (
+    "喊累", "喊烦", "说累", "倒苦水", "诉苦", "抱怨", "丧气", "吐槽",
+    "快撑不住", "撑不下去", "难受", "难过", "哭", "崩溃", "情绪",
+)
+
 KERNEL_CONFLICTS: Tuple[Tuple[str, str, str], ...] = (
     (
         "问句收尾",
@@ -666,6 +675,16 @@ def style_checks(persona: Dict[str, Any]) -> List[VError]:
                 errors.append(
                     VError("system_prompt", f'不能出现「{word}」这种助手腔，换成人格自己的说法')
                 )
+
+        # 别人倒苦水是最常见的对话场景，卡里不交代就会退回默认反应
+        if not any(hint in system_prompt for hint in VENTING_HINTS):
+            errors.append(
+                VError(
+                    "system_prompt",
+                    "要交代「别人喊累、喊烦、难受的时候它干什么」，"
+                    "不然模型会自己补一句「累就早点睡」——那是所有鱼共用的默认反应，不是这条鱼的",
+                )
+            )
 
     dialogues = persona.get("example_dialogues")
     if isinstance(dialogues, list):
