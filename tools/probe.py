@@ -23,6 +23,7 @@ validate.py 管得住结构，管不住「这条鱼像不像人」。这个脚�
     python3 tools/probe.py repeat --only lao-fei,alley-cat -n 10
 
 子命令：
+    static     不联网、不花 key 的静态检查：占位符、首行、示例、markdown、括号内心戏
     ai-smell   连着顶它七轮，数它有没有认错、说元话、点评自己、拿问句收尾、报备行程
     repeat     同一句「今天好累啊」跑 N 次，数纯复读（只剩模板句、没别的信息）
     spread     二十张卡喂同一句，看回复区别大不大——人格糊没糊在这里看
@@ -483,7 +484,52 @@ def cmd_guard(ids: List[str], n: int) -> int:
     return 0
 
 
+def cmd_static(ids: List[str], n: int) -> int:
+    """不联网、不花 key 的那部分检查。
+
+    真模型评测要看运气、要花钱、要有 key，这三样随时可能没有。
+    所以判据得分成两半：能静态查的（长度、markdown、括号内心戏、
+    参照句、复读口令）全部塞进这里，日常跑这个就够；
+    cmd_ai_smell 那些只负责模型真的会怎么接话。
+    """
+    fails: List[str] = []
+    for pid in ids:
+        prompt = load(pid)
+        problems = []
+        if "{{" in prompt or "}}" in prompt:
+            problems.append("占位符没替换干净")
+        first = prompt.splitlines()[0] if prompt else ""
+        if not first.startswith("# 你现在是 "):
+            problems.append(f"首行不是「# 你现在是 名字」：{first[:30]}")
+        # 示例对话里必须有一句能当「它说话就是这味」的参照，
+        # 否则模型只能靠形容词猜语气
+        if "你说：" not in prompt and "对方：" not in prompt and "群友：" not in prompt:
+            problems.append("没有示例对话")
+        for sign in ("## ", "**", "```", "- [ ]"):
+            if sign in prompt:
+                problems.append(f"prompt 里混进 markdown 痕迹「{sign}」")
+                break
+        # 括号内心戏是明确禁的，示例里出现等于自相矛盾
+        if re.search(r"[（(](?:心想|暗想|内心|旁白|沉默|停顿)[^）)]*[）)]", prompt):
+            problems.append("示例里有括号内心戏")
+        if problems:
+            fails.append(pid)
+            print(f"🔴 {pid}")
+            for item in problems:
+                print(f"     {item}")
+        else:
+            print(f"🟢 {pid}")
+
+    print("\n" + "=" * 60)
+    if fails:
+        print(f"静态检查不通过 {len(fails)}/{len(ids)}：{', '.join(fails)}")
+        return 1
+    print(f"静态检查 {len(ids)} 张全过（没联网，没花 key）")
+    return 0
+
+
 COMMANDS = {
+    "static": cmd_static,
     "ai-smell": cmd_ai_smell,
     "repeat": cmd_repeat,
     "spread": cmd_spread,
@@ -495,7 +541,7 @@ COMMANDS = {
 def main(argv: List[str]) -> int:
     ap = argparse.ArgumentParser(
         description="把人格卡真的跑起来，量化它像不像人。",
-        epilog="不带子命令就跑全部四项。",
+        epilog="不带子命令就跑全部要联网的检查；static 不联网、不需要 key，单独跑。",
     )
     ap.add_argument("command", nargs="?", default="all", choices=["all", *COMMANDS])
     ap.add_argument("--only", help="只跑这几张卡，逗号分隔，比如 lao-fei,alley-cat")
@@ -503,11 +549,17 @@ def main(argv: List[str]) -> int:
                     help="每张卡采样几次（默认 ai-smell=1、repeat=5、spread=1、guard=1）")
     args = ap.parse_args(argv)
 
-    _require_setup()
     ids = parse_ids(args.only)
 
-    plan = COMMANDS if args.command == "all" else {args.command: COMMANDS[args.command]}
-    defaults = {"ai-smell": 1, "repeat": 5, "spread": 1, "endurance": 1, "guard": 1}
+    if args.command == "all":
+        # all 跑的是要花钱的那批；static 单独跑，没 key 也能用
+        plan = {k: v for k, v in COMMANDS.items() if k != "static"}
+        _require_setup()
+    else:
+        plan = {args.command: COMMANDS[args.command]}
+        if args.command != "static":
+            _require_setup()
+    defaults = {"static": 1, "ai-smell": 1, "repeat": 5, "spread": 1, "endurance": 1, "guard": 1}
 
     rc = 0
     for name, fn in plan.items():

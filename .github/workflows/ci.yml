@@ -72,6 +72,9 @@ jobs:
           print(f"酒馆卡 {len(files)} 张，全部满足 V2 必填字段")
           EOF
 
+      - name: 静态检查（不联网、不需要 key）
+        run: python tools/probe.py static
+
       - name: 探针脚本能跑（不打真 API，只确认可执行）
         run: |
           python tools/probe.py --help > /dev/null
