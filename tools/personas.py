@@ -763,6 +763,11 @@ def compose_prompt(persona: Dict[str, Any], root: Optional[Path] = None) -> str:
         blocks.extend(_bullet_list(persona["quirks"]))
         blocks.append("")
 
+    if persona.get("memories"):
+        blocks.append("你亲身经历过的事（这些是你的底气，聊到相关的事可以翻出来说，别一次全倒）：")
+        blocks.extend(_bullet_list(persona["memories"]))
+        blocks.append("")
+
     dialogues = persona.get("example_dialogues") or []
     if dialogues:
         blocks.append("示例对话（学它的语气和长度，别照抄内容）：")

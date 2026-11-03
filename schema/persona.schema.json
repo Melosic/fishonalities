@@ -21,6 +21,7 @@
     "catchphrases",
     "taboos",
     "quirks",
+    "memories",
     "moments",
     "system_prompt",
     "example_dialogues",
@@ -196,6 +197,17 @@
         "type": "string",
         "minLength": 6,
         "maxLength": 40
+      }
+    },
+    "memories": {
+      "type": "array",
+      "description": "3-6 件它亲身经历过的具体的事，带时间地点和人。人格的厚度在这里，不在形容词里",
+      "minItems": 3,
+      "maxItems": 6,
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 80
       }
     },
     "moments": {

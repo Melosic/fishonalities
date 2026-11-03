@@ -8,6 +8,7 @@
     我们有的                 →  酒馆的
     tagline + summary        →  description 开头
     speak / catchphrases     →  description 正文（说话方式）
+    memories                 →  description 正文（亲身经历过的事）
     quirks / taboos          →  description 正文（怪癖与禁区）
     moments.greeting         →  first_mes
     moments.fed / poke       →  alternate_greetings
@@ -59,6 +60,10 @@ def _render_description(persona: Dict[str, Any]) -> str:
         parts.append("【常挂嘴边的】")
         parts.extend(f"- {line}" for line in persona["catchphrases"])
 
+    if persona.get("memories"):
+        parts.append("")
+        parts.append("【它亲身经历过的事】")
+        parts.extend(f"- {line}" for line in persona["memories"])
     if persona.get("quirks"):
         parts.append("")
         parts.append("【小毛病】")
