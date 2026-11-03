@@ -1,7 +1,7 @@
 # 🐟 鱼格 · fishonalities
 
 [![CI](https://github.com/Melosic/fishonalities/actions/workflows/ci.yml/badge.svg)](https://github.com/Melosic/fishonalities/actions/workflows/ci.yml)
-[![人格卡](https://img.shields.io/badge/%E4%BA%BA%E6%A0%BC%E5%8D%A1-20%20%E6%9D%A1-2ea44f)](personas)
+[![人格卡](https://img.shields.io/badge/%E4%BA%BA%E6%A0%BC%E5%8D%A1-21%20%E6%9D%A1-2ea44f)](personas)
 [![License: MIT](https://img.shields.io/badge/code-MIT-blue)](LICENSE)
 [![内容许可](https://img.shields.io/badge/content-CC%20BY--SA%204.0-lightgrey)](LICENSE-CONTENT)
 
