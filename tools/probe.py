@@ -105,6 +105,14 @@ GUARDS: List[Tuple[str, str, str]] = [
 
 # ---------------------------------------------------------------- 调用
 
+def _redact(message: object) -> str:
+    """异常信息里万一带了 key，先擦掉再打印。"""
+    text = str(message)
+    if API_KEY and API_KEY in text:
+        text = text.replace(API_KEY, "sk-***")
+    return text
+
+
 def _require_setup() -> None:
     if not API_KEY:
         raise SystemExit("先 export FAT_FISH_API_KEY=sk-xxx")
@@ -144,7 +152,7 @@ def call(system: str, messages: Sequence[dict], temperature: float = TEMPERATURE
         except Exception as exc:
             last = exc
             time.sleep(2)
-    print(f"[警告] 调用失败：{last}", file=sys.stderr)
+    print(f"[警告] 调用失败：{_redact(last)}", file=sys.stderr)
     return "[ERR]"
 
 
@@ -182,16 +190,19 @@ def cmd_ai_smell(ids: List[str], n: int) -> int:
     """连着顶七轮，数五类露馅动作。这是最像真实翻车的场景。"""
     tells = list(AI_SMELLS) + ["问句收尾"]
 
-    def one(pid: str) -> Tuple[str, Dict[str, int], int, List[int]]:
+    def one(pid: str) -> Tuple[str, Dict[str, int], int, List[int], int]:
         system = load(pid)
         hits = {k: 0 for k in tells}
-        total, lens = 0, []
+        total, lens, errors = 0, [], 0
         for _ in range(n):
             hist: List[dict] = []
             for turn in AI_SMELL_TURNS:
                 hist.append({"role": "user", "content": turn})
                 reply = call(system, hist)
                 hist.append({"role": "assistant", "content": reply})
+                if reply == "[ERR]":
+                    errors += 1
+                    continue
                 total += 1
                 lens.append(len(reply))
                 for name, pat in AI_SMELLS.items():
@@ -199,7 +210,7 @@ def cmd_ai_smell(ids: List[str], n: int) -> int:
                         hits[name] += 1
                 if reply.rstrip().endswith(("？", "?")):
                     hits["问句收尾"] += 1
-        return pid, hits, total, lens
+        return pid, hits, total, lens, errors
 
     print(f"=== AI 味：{len(ids)} 卡 × {n} 轮 × {len(AI_SMELL_TURNS)} 句 ===")
     with ThreadPoolExecutor(max_workers=WORKERS) as ex:
@@ -208,12 +219,16 @@ def cmd_ai_smell(ids: List[str], n: int) -> int:
     head = " ".join(f"{t:>6}" for t in tells)
     print(f"{'卡':<12} {head}   均长")
     agg = {k: 0 for k in tells}
-    grand, all_lens = 0, []
-    for pid, hits, total, lens in results:
+    grand, all_lens, total_errors = 0, [], 0
+    for pid, hits, total, lens, errors in results:
         grand += total
         all_lens += lens
+        total_errors += errors
         for k in tells:
             agg[k] += hits[k]
+        if not total:
+            print(f"{pid:<12} 全部调用失败")
+            continue
         row = " ".join(f"{hits[k]:>4}/{total:<2}" for k in tells)
         print(f"{pid:<12} {row}   {sum(lens)//len(lens)}")
 
@@ -224,35 +239,54 @@ def cmd_ai_smell(ids: List[str], n: int) -> int:
         print(f"  {k}: {agg[k]}/{grand} = {pct:.1f}%")
     if all_lens:
         print(f"  平均长度 {sum(all_lens)//len(all_lens)} 字")
+    if total_errors:
+        print(f"  ⚠ 有 {total_errors} 次调用失败，没算进上面任何一个分母")
+    if not grand:
+        print("\n一条回复都没拿到，先检查 API key 和网络。")
+        return 2
     return 0
 
 
 def cmd_repeat(ids: List[str], n: int) -> int:
     """同一句跑 N 次。单次快照会被采样噪声骗，必须重复采样才算数。"""
-    def one(pid: str) -> Tuple[str, int, List[str]]:
+    def one(pid: str) -> Tuple[str, int, int, List[str]]:
         system = load(pid)
         outs = [call(system, [{"role": "user", "content": REPEAT_PROBE}]) for _ in range(n)]
-        return pid, sum(1 for o in outs if _is_hollow(o)), outs
+        errs = sum(1 for o in outs if o == "[ERR]")
+        # 采样失败的那次不能算进分母，否则报错会伪装成 0% 复读
+        ok = [o for o in outs if o != "[ERR]"]
+        return pid, sum(1 for o in ok if _is_hollow(o)), errs, ok
 
     print(f"=== 复读：{len(ids)} 卡 × {n} 次，同一句「{REPEAT_PROBE}」 ===")
     with ThreadPoolExecutor(max_workers=WORKERS) as ex:
         results = list(ex.map(one, ids))
 
-    bad = []
-    for pid, hits, outs in results:
-        rate = hits / n
+    bad, failed = [], []
+    rates = []
+    for pid, hits, errs, outs in results:
+        if not outs:
+            failed.append(pid)
+            print(f"⚫ {pid:<11} 全部调用失败（API key 或网络问题）")
+            continue
+        rate = hits / len(outs)
+        rates.append(rate)
         flag = "🔴" if rate >= 0.6 else ("🟡" if rate >= 0.4 else "🟢")
         if rate >= 0.4:
             bad.append(pid)
         # 展示的必须是真命中的那条，否则数字和例子对不上
         shown = next((o for o in outs if _is_hollow(o)), outs[0])
-        print(f"{flag} {pid:<11} {hits}/{n} = {rate:.0%}   ｜ {shown}")
+        tail = f"   （{errs} 次调用失败）" if errs else ""
+        print(f"{flag} {pid:<11} {hits}/{len(outs)} = {rate:.0%}   ｜ {shown}{tail}")
 
-    avg = sum(h / n for _, h, _ in results) / len(results)
     print("\n" + "=" * 60)
-    print(f"整体平均复读率 {avg:.1%}")
-    print(f"复读率 >= 40% 的卡 {len(bad)}/{len(results)}：{', '.join(bad) or '无'}")
-    return 0 if not bad else 1
+    if not rates:
+        print("一张卡都没跑成，先检查 API key 和网络。")
+        return 2
+    print(f"整体平均复读率 {sum(rates)/len(rates):.1%}")
+    print(f"复读率 >= 40% 的卡 {len(bad)}/{len(rates)}：{', '.join(bad) or '无'}")
+    if failed:
+        print(f"没跑成的卡 {len(failed)} 张：{', '.join(failed)}")
+    return 0 if not bad and not failed else 1
 
 
 def cmd_spread(ids: List[str], n: int) -> int:
@@ -266,6 +300,11 @@ def cmd_spread(ids: List[str], n: int) -> int:
         with ThreadPoolExecutor(max_workers=WORKERS) as ex:
             pairs = list(ex.map(one, ids))
 
+        pairs = [(pid, r) for pid, r in pairs if r != "[ERR]"]
+        if not pairs:
+            print(f"\n⚫ 「{probe}」全部调用失败，跳过")
+            overall_ok = False
+            continue
         heads = {r[:4] for _, r in pairs}
         grams = []
         for i, (_, a) in enumerate(pairs):
@@ -302,18 +341,21 @@ def cmd_guard(ids: List[str], n: int) -> int:
     print(f"=== 底线：{len(ids)} 卡 × {len(GUARDS)} 条 ===")
     failures: List[str] = []
 
-    def one(item: Tuple[str, Tuple[str, str, str]]) -> Tuple[str, str, List[str]]:
+    def one(item: Tuple[str, Tuple[str, str, str]]) -> Tuple[str, str, List[str], int]:
         pid, (label, probe, pattern) = item
         outs = [call(load(pid), [{"role": "user", "content": probe}]) for _ in range(n)]
-        bad = [o for o in outs if not re.search(pattern, o) or o == "[ERR]"]
-        return pid, label, bad
+        errors = sum(1 for o in outs if o == "[ERR]")
+        bad = [o for o in outs if o != "[ERR]" and not re.search(pattern, o)]
+        return pid, label, bad, errors
 
     tasks = [(pid, g) for pid in ids for g in GUARDS]
     with ThreadPoolExecutor(max_workers=WORKERS) as ex:
         results = list(ex.map(one, tasks))
 
     by_label: Dict[str, List[Tuple[str, List[str]]]] = {label: [] for label, _, _ in GUARDS}
-    for pid, label, bad in results:
+    total_errors = 0
+    for pid, label, bad, errors in results:
+        total_errors += errors
         by_label[label].append((pid, bad))
         if bad:
             failures.append(f"{pid} / {label}：{bad[0][:50]}")
@@ -327,10 +369,19 @@ def cmd_guard(ids: List[str], n: int) -> int:
                 print(f"     {pid}：{bad[0][:60]}")
 
     print("\n" + "=" * 60)
+    if total_errors:
+        print(f"⚠ 有 {total_errors} 次调用失败，这些没算进判定——失败不等于破底线，但这次结果不算数。")
     if failures:
         print(f"破底线 {len(failures)} 处：")
         for f in failures:
             print(f"  - {f}")
+        return 1
+    total_checks = len(ids) * len(GUARDS) * n
+    if total_errors >= total_checks:
+        print("一次都没调通，这次没有任何结论，先查 API key 和网络。")
+        return 2
+    if total_errors:
+        print("除失败项外，其余都过；建议重跑一次确认。")
         return 1
     print("四条底线全过。")
     return 0

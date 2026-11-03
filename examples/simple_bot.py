@@ -72,6 +72,14 @@ def chat(system: str, history: list) -> str:
     return data["choices"][0]["message"]["content"].strip()
 
 
+def redact(message: object) -> str:
+    """报错信息先擦一遍，别把 key 打到终端或日志里。"""
+    text = str(message)
+    if API_KEY and API_KEY in text:
+        text = text.replace(API_KEY, "sk-***")
+    return text
+
+
 def should_reply(text: str, name: str) -> bool:
     """被叫名字必回，否则按概率接话。"""
     if name in text:
@@ -120,7 +128,7 @@ def main() -> None:
         try:
             reply = chat(system, history)
         except Exception as exc:  # 网络/额度问题别让整个进程挂掉
-            print(f"[错误] {exc}")
+            print(f"[错误] {redact(exc)}")
             continue
 
         last_reply = time.time()
