@@ -136,8 +136,10 @@ fishonalities/
 │   ├── mother/        # 妈妈型
 │   ├── sister/        # 妹妹型
 │   └── freeloader/    # 吃白饭
-├── tools/             # 校验 / 构建 / 本地试跑
+├── tools/             # 校验 / 构建 / 本地试跑 / 社区卡导入
 ├── dist/              # 构建产物（index.json、拼好的完整 prompt、酒馆卡）
+├── local/             # 本地导入的社区卡（不进仓库）
+├── COMMUNITY.md       # 网上流传的大肥鱼卡索引 + 取用方法
 └── docs/              # 写作规范、接入指南
 ```
 
@@ -177,6 +179,28 @@ python3 tools/export_tavern.py  # 生成 dist/tavern/<id>.json
 导出的是一份标准 SillyTavern Character Card V2：描述、开场白、示例对话都按酒馆的字段拆好了，鱼形数据（品种、颜色、体重）和六场景语料塞在 `extensions.fat_fish` 里不丢。直接拖进 SillyTavern 或 chub.ai 就能用。
 
 > 说句公道话：酒馆是**单人沉浸扮演**的地盘，它不关心「群里该不该开口」这回事。所以导出去的卡，群聊那层分寸感是带不过去的；反过来，我们的原生 prompt 也不需要酒馆那套世界书。两条路各走各的，能互通但不互相替代。
+
+---
+
+## 网上那些几千字的大肥鱼卡
+
+外面确实流传着一批写得很好的人设卡——[aigengtu.com/persona](https://aigengtu.com/persona) 收了 26 张，合计 17.6 万字，每张都覆盖了我们一张卡没写的细节。
+
+**本仓库不收它们的正文**，那是别人写的作品，版权归原作者。我们做的是两件别的事：
+
+**一是编了索引。** [COMMUNITY.md](COMMUNITY.md) 把 26 张卡按路子分了类（群友游戏流、性格调配流、家庭陪伴流、特色人格流），每张标了字数、标签、原站声明。想用哪张，去原处取。
+
+**二是写了个导入器。** 你把原卡复制下来，它把安全底线和场合规则拼在前面：
+
+```bash
+python3 tools/import_community.py raw.txt --name 小鲸鱼 --channel group
+```
+
+产出在 `local/imported/`（`.gitignore` 已排除）。它就是个纯文本 system prompt，塞进任何 OpenAI 兼容接口的 `system` 字段就能跑。
+
+导入器默认**不叠**我们自己的 `kernel/voice.md`——社区卡自带的「去 AI 味」章节写得比我们细，两套说话规矩叠在一起反而打架。要叠就加 `--with-voice`。但**安全底线一定叠**，社区卡不一定会写「不编造事实」这些。
+
+目前仓库里 20 张卡中有 6 张是这条路子的成果：读原卡、提炼它为什么有效、用我们自己的话重写、`meta.inspiration` 标出处（桂姨、小糖、白条、苟蛋、椒盐、烟斗）。
 
 ---
 

@@ -12,3 +12,6 @@ venv/
 .idea/
 .vscode/
 *.swp
+
+# 本地导入的社区卡（正文版权归原作者，不进仓库）
+local/
