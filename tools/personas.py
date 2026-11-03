@@ -578,6 +578,68 @@ def identity_checks(persona: Dict[str, Any], path: Path) -> List[VError]:
     return errors
 
 
+# 内核里写死的几条禁令，卡里不能再教相反的动作。
+# 之前 a-meng 就是这么破的：内核说「别拿问句收尾」，
+# 卡里写着「句尾爱加是这样吗对不对」——两套规矩对着干，模型只好二选一。
+KERNEL_CONFLICTS: Tuple[Tuple[str, str, str], ...] = (
+    (
+        "问句收尾",
+        r"问句收尾|反问收尾|句尾(爱|总|常)加.{0,6}[吗呢？?]|说完(还|又|会)问一句|爱用反问|挂在?(句)?尾.{0,4}问",
+        "内核禁「拿问号把话递回去」，这张卡却在教它句尾挂问句",
+    ),
+    (
+        "报备行程",
+        r"会(顺口|主动|随口)(报|说|交代)(一句|自己)(在|去|要)(干嘛|做什么|哪)|收尾(时|前)?(顺口)?报一句",
+        "内核禁「句句交代自己在干嘛」，这张卡却在教它报备",
+    ),
+    (
+        "括号内心戏",
+        r"用括号(写|加|补)(内心|旁白|动作)|括[号弧]里写(上)?(心理|内心|旁白)",
+        "内核禁「不写括号里的内心戏」，这张卡却在教它写",
+    ),
+    (
+        "自我点评",
+        r"点评自己|评价自己|检讨自己|说(一句)?我(这人|就是).{0,6}(不会|不懂|不好)",
+        "内核禁「把自己当商品介绍」，这张卡却在教它自我点评",
+    ),
+)
+
+
+def kernel_conflicts(persona: Dict[str, Any]) -> List[VError]:
+    """卡自己写的动作，有没有跟内核的禁令对着干。
+
+    只查卡的文本（speak / quirks / system_prompt / example_dialogues），
+    不查 taboos——taboos 本来就是「我不做这些」，写了禁令是正常的。
+    """
+    errors: List[VError] = []
+    chunks: List[Tuple[str, str]] = []
+
+    for field in ("speak", "quirks", "catchphrases", "memories"):
+        value = persona.get(field)
+        if isinstance(value, list):
+            for index, item in enumerate(value):
+                if isinstance(item, str):
+                    chunks.append((f"{field}[{index}]", item))
+
+    for field in ("system_prompt", "summary", "tagline"):
+        value = persona.get(field)
+        if isinstance(value, str):
+            chunks.append((field, value))
+
+    dialogues = persona.get("example_dialogues")
+    if isinstance(dialogues, list):
+        for index, turn in enumerate(dialogues):
+            if isinstance(turn, dict) and isinstance(turn.get("assistant"), str):
+                chunks.append((f"example_dialogues[{index}].assistant", turn["assistant"]))
+
+    for name, pattern, reason in KERNEL_CONFLICTS:
+        rx = re.compile(pattern)
+        for field, text in chunks:
+            if rx.search(text):
+                errors.append(VError(field, f'{reason}（命中「{name}」）'))
+    return errors
+
+
 def style_checks(persona: Dict[str, Any]) -> List[VError]:
     """文风硬线：专属口头禅、别带助手腔、群聊消息里别出现 markdown。"""
     errors: List[VError] = []

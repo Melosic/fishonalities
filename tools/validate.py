@@ -71,6 +71,8 @@ def collect(root: Optional[Path] = None, strict: bool = False) -> Report:
                 errors.append((label, verr))
             for verr in P.style_checks(data):
                 errors.append((label, verr))
+            for verr in P.kernel_conflicts(data):
+                errors.append((label, verr))
 
     if strict:
         for label, verr in P.duplicate_id_errors(entries):
