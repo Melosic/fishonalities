@@ -235,7 +235,7 @@
       "type": "string",
       "description": "给模型的人设指令，第二人称写，纯文字不整活",
       "minLength": 120,
-      "maxLength": 600
+      "maxLength": 900
     },
     "example_dialogues": {
       "type": "array",
