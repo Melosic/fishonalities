@@ -44,3 +44,12 @@ python3 tools/export_tavern.py       # 顺带生成酒馆卡（可选）
 ```
 
 填 `schema/rubric.json` 自评一遍，总分 70 分以上再提。
+
+**要是你手上刚好有 API key，再跑一遍真模型探针**（可选，但很值）：
+
+```bash
+python3 tools/probe.py --only <你的卡>      # 四项全跑，只查你这一张
+python3 tools/probe.py repeat -n 10 --only <你的卡>
+```
+
+它会把你的卡真的丢给模型，数认错、元话语、自我点评、报备行程、问句收尾这几类动作，还会检查越界和身份问答。**PR 里贴一张跑之前的对照，比写十句「我觉得它挺像人」有用。** 数字不达标不一定要改，但得知道自己在哪一格。

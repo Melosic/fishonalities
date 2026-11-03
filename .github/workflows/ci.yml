@@ -72,6 +72,16 @@ jobs:
           print(f"酒馆卡 {len(files)} 张，全部满足 V2 必填字段")
           EOF
 
+      - name: 探针脚本能跑（不打真 API，只确认可执行）
+        run: |
+          python tools/probe.py --help > /dev/null
+          python - <<'EOF'
+          import importlib.util, pathlib
+          spec = importlib.util.spec_from_file_location("probe", "tools/probe.py")
+          assert spec is not None and spec.loader is not None
+          print("probe.py 可导入")
+          EOF
+
       - name: 检查产物确定性（同输入两次构建必须字节一致）
         run: |
           cp -r dist /tmp/dist-first
