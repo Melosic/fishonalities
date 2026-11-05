@@ -72,6 +72,9 @@ jobs:
           print(f"酒馆卡 {len(files)} 张，全部满足 V2 必填字段")
           EOF
 
+      - name: 体检（信号占比 / 卡间相似度 / 卡内自检，不联网）
+        run: python tools/audit.py
+
       - name: 静态检查（不联网、不需要 key）
         run: python tools/probe.py static
 

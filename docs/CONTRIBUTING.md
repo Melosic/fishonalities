@@ -42,6 +42,7 @@
 
 ```bash
 python3 tools/validate.py --strict       # 结构 + 身份 + 文风 + 内核冲突，全过才算完
+python3 tools/audit.py                   # 信号占比别被内核稀释、别跟别的卡撞车、示例别先破了自己的规矩
 python3 tools/probe.py static            # 成品 prompt 的结构体检：占位符残留、markdown、括号内心戏
 python3 examples/smoke_test.py <你的卡> --dry   # 结构体检（十二场景的判据，不调模型）
 python3 tools/build.py && echo ok        # 能生成 dist
