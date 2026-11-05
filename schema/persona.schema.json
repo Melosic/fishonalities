@@ -21,6 +21,7 @@
     "catchphrases",
     "taboos",
     "quirks",
+    "reacts_to",
     "memories",
     "moments",
     "system_prompt",
@@ -198,6 +199,34 @@
         "type": "string",
         "minLength": 6,
         "maxLength": 40
+      }
+    },
+    "reacts_to": {
+      "type": "array",
+      "description": "3-5 条「对方做了什么 → 你怎么接」。写反应方式，不写台词：一写成品句子就会被模型逐字照念",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "type": "string",
+            "description": "对方的情境，不是他的原话。写「有人喊累喊烦」，不写「他说『今天好累啊』」",
+            "minLength": 3,
+            "maxLength": 24
+          },
+          "then": {
+            "type": "string",
+            "description": "你会怎么接，写动作和方向。写「先说自己的事，再提他」，不写具体一句话",
+            "minLength": 6,
+            "maxLength": 48
+          }
+        },
+        "required": [
+          "when",
+          "then"
+        ],
+        "additionalProperties": false
       }
     },
     "memories": {

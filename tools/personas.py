@@ -56,6 +56,20 @@ def _other_label(persona: Dict[str, Any]) -> str:
 YAML_SUFFIXES = (".yaml", ".yml")
 
 
+def _second_person(text: str) -> str:
+    """卡里写「有人夸它」是为了卡片自己好读，拼进 prompt 得换成「你」不然人称就乱了。"""
+    return text.replace("它", "你")
+
+
+def _strip_lead(text: str) -> str:
+    """去掉「你」「会」「就」这类开头，方便拼成「有人…的时候，你…」的句式。"""
+    for prefix in ("你会", "你", "会", "就", "则"):
+        if text.startswith(prefix) and len(text) > len(prefix):
+            return text[len(prefix):]
+    return text
+
+
+
 class PersonaError(Exception):
     """人格卡加载 / 校验失败。"""
 
@@ -676,13 +690,19 @@ def style_checks(persona: Dict[str, Any]) -> List[VError]:
                     VError("system_prompt", f'不能出现「{word}」这种助手腔，换成人格自己的说法')
                 )
 
-        # 别人倒苦水是最常见的对话场景，卡里不交代就会退回默认反应
-        if not any(hint in system_prompt for hint in VENTING_HINTS):
+        # 别人倒苦水是最常见的对话场景，卡里不交代就会退回默认反应。
+        # 两条路都算数：写进 system_prompt，或者落在 reacts_to 里
+        has_venting_react = any(
+            any(hint in str(item.get("when", "")) + str(item.get("then", "")) for hint in VENTING_HINTS)
+            for item in (persona.get("reacts_to") or [])
+            if isinstance(item, dict)
+        )
+        if not has_venting_react and not any(hint in system_prompt for hint in VENTING_HINTS):
             errors.append(
                 VError(
-                    "system_prompt",
-                    "要交代「别人喊累、喊烦、难受的时候它干什么」，"
-                    "不然模型会自己补一句「累就早点睡」——那是所有鱼共用的默认反应，不是这条鱼的",
+                    "reacts_to",
+                    "要交代「别人喊累、喊烦、难受的时候它干什么」——写进 reacts_to 或 system_prompt 都行。"
+                    "不写的话模型会自己补一句「累就早点睡」，那是所有鱼共用的默认反应，不是这条鱼的",
                 )
             )
 
@@ -842,6 +862,20 @@ def compose_prompt(persona: Dict[str, Any], root: Optional[Path] = None) -> str:
     if persona.get("quirks"):
         blocks.append(f"行为怪癖（可以被{_other_label(persona)}观察到的）：")
         blocks.extend(_bullet_list(persona["quirks"]))
+        blocks.append("")
+
+    reacts = persona.get("reacts_to") or []
+    if reacts:
+        blocks.append("遇到这些情况，你是这么接的（写的是方向不是台词，按这个走，别把里面的字念出来）：")
+        for item in reacts:
+            when = str(item.get("when", "")).strip()
+            then = str(item.get("then", "")).strip()
+            if when and then:
+                clause = _second_person(_strip_lead(when))
+                # 「AI的时候」这种中英夹住的地方补个空格，读起来才不像拼接的
+                if clause and clause[-1].isascii() and clause[-1].isalnum():
+                    clause += " "
+                blocks.append(f"- {clause}的时候，{_second_person(_strip_lead(then))}。")
         blocks.append("")
 
     if persona.get("memories"):
