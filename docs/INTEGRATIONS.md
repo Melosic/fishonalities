@@ -120,7 +120,9 @@ QQ 客户端 → NapCat（OneBot v11）→ 你的程序（HTTP / WebSocket）
 
 导出后的 prompt 里能直接看到判据：`channel: group` 的卡开头是「你是一条养在**群聊**里的」，`both` 的会同时带上【场合规则 · 群聊里】和【场合规则 · 私聊里】两段。
 
-**一对一私养其实比接群更省事**，也更容易出效果：不用装 NapCat、不用管掉线、不用怕刷屏。一个聊天框，接个 OpenAI 兼容接口就行。`examples/simple_bot.py` 里的冷却、回复概率这些群聊参数，私聊场景全部关掉，改成每条都回。
+**一对一私养其实比接群更省事**，也更容易出效果：不用装 NapCat、不用管掉线、不用怕刷屏。一个聊天框，接个 OpenAI 兼容接口就行。
+
+[`examples/simple_bot.py`](../examples/simple_bot.py) 就是按场合分好参数的：它读人格卡的 `channel` 字段，自己切两套——`gou-dan`（群聊卡）冷却 8 秒、35% 概率接话、超过 6 秒这轮干脆不回；`xiao-geng`（私聊卡）每条都接、延迟放到 25 秒、默认带上记事本。`--group` / `--private` 强制切，`--no-delay` / `--no-memory` 用来调试。
 
 区别在于三件事：
 

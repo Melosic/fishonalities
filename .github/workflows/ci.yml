@@ -84,6 +84,22 @@ jobs:
       - name: 记忆层能跑（不联网、不需要 key）
         run: python examples/memory.py
 
+      - name: 机器人样板能跑（不联网、不需要 key）
+        run: |
+          python examples/simple_bot.py --help > /dev/null
+          # 无 key 时不该崩在这里，而是把卡读进来、等输入
+          printf '/quit\n' | python examples/simple_bot.py xiao-geng --private --no-delay
+          printf '/quit\n' | python examples/simple_bot.py gou-dan --group --no-delay
+          # 群聊卡读到 channel=group，私聊卡读到 channel=private
+          python - <<'EOF'
+          import json, pathlib, sys
+          index = json.loads(pathlib.Path("dist/index.json").read_text(encoding="utf-8"))
+          ch = {p["id"]: p["channel"] for p in index["personas"]}
+          if ch.get("gou-dan") != "group" or ch.get("xiao-geng") != "private":
+              print(f"channel 读错了：{ch.get('gou-dan')} / {ch.get('xiao-geng')}"); sys.exit(1)
+          print("样板读得到 channel 字段")
+          EOF
+
       - name: 打包开箱文件夹
         run: |
           python tools/pack.py --out /tmp/pack

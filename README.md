@@ -150,7 +150,7 @@ fishonalities/
 │   ├── freeloader/    # 吃白饭
 │   └── peer/          # 同龄人
 ├── tools/             # 校验 / 体检 / 构建 / 打包 / 本地试跑 / 真模型评测 / 社区卡导入
-├── examples/          # 能跑起来的样板：群聊机器人、冒烟测试、记忆层
+├── examples/          # 能跑起来的样板：接平台的机器人、冒烟测试、记忆层
 ├── tests/             # 判据自己的自测（判据写错比没判据更糟）
 ├── dist/              # 构建产物（index.json、拼好的完整 prompt、酒馆卡）
 ├── out/               # pack.py 生成的「拷到手机就能用」文件夹（不进仓库）
@@ -209,6 +209,15 @@ python3 tools/chat.py xiao-geng
 ```
 
 不接群也能试。觉得不像，改 YAML 再跑，比在群里丢人强。
+
+**它跟 `tools/chat.py` 的区别**：`chat.py` 只发消息，不管什么时候发；[`examples/simple_bot.py`](examples/simple_bot.py) 是**接进平台之后那个样子**的样板——按人格卡的 `channel` 自己分群聊/私聊两套规矩，回之前先等一会儿（群里封顶 6 秒，超了这轮就不回），私聊把对方说过的事记在 `local/state/` 里。想接 QQ 群或自己的聊天框，从这个文件改起，比从零写快得多。
+
+```bash
+python3 examples/simple_bot.py gou-dan      # 群聊卡：冷却、概率接话、超时放弃
+python3 examples/simple_bot.py xiao-geng    # 私聊卡：每条都接、记得住、可以慢慢回
+```
+
+它不做的：不连任何平台（收发消息那层你得自己接 NapCat / TG API）。它只管「拿到一句话之后，该怎么回、等多久、记什么」。这两件事是分开的，也是大部分人接完机器人之后唯一没做对的部分。
 
 改完卡想快速看效果，跑这个：
 
