@@ -81,6 +81,9 @@ jobs:
       - name: 判据自测（不联网、不需要 key）
         run: python tests/test_smoke_judge.py
 
+      - name: 记忆层能跑（不联网、不需要 key）
+        run: python examples/memory.py
+
       - name: 打包开箱文件夹
         run: |
           python tools/pack.py --out /tmp/pack

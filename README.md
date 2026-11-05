@@ -139,7 +139,7 @@ fishonalities/
 │   ├── freeloader/    # 吃白饭
 │   └── peer/          # 同龄人
 ├── tools/             # 校验 / 体检 / 构建 / 打包 / 本地试跑 / 真模型评测 / 社区卡导入
-├── examples/          # 能跑起来的样板：群聊机器人、改完卡先跑一下的冒烟测试
+├── examples/          # 能跑起来的样板：群聊机器人、冒烟测试、记忆层
 ├── tests/             # 判据自己的自测（判据写错比没判据更糟）
 ├── dist/              # 构建产物（index.json、拼好的完整 prompt、酒馆卡）
 ├── out/               # pack.py 生成的「拷到手机就能用」文件夹（不进仓库）
@@ -220,9 +220,25 @@ python3 tools/export_tavern.py  # 生成 dist/tavern/<id>.json
 
 **还有个 prompt 管不到的东西：打字节奏。**
 
-秒回是最容易被一眼看穿的 AI 动作，比任何措辞都真。你回得越快越齐整，越像在等输入。所以接进去之后，记得在接入层加一层延迟——基础 2-6 秒、每次抖一下、偶尔慢到几十秒、长回答拆成两条隔一秒发。具体做法和坑都写在 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) 里。
+秒回是最容易被一眼看穿的 AI 动作，比任何措辞都真。你回得越快越齐整，越像在等输入。所以接进去之后，记得在接入层加一层延迟——**群聊封顶 6 秒、私聊 2-6 秒起步偶尔慢到几十秒、长回答拆成两条隔一秒发**，具体做法和坑都写在 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) 里。
 
 prompt 能管住它说什么，管不住它什么时候说。这一半得你自己补。
+
+**还有一半也补不了：记忆。**
+
+「它记得你上次说的那件事」是私聊最值钱的地方，但纯 prompt 项目做不到——模型每轮都是重开一次，`HISTORY_LIMIT` 之外的东西全部消失。要真记得，得在接入层加一本记事本。
+
+[`examples/memory.py`](examples/memory.py) 是个能跑的最小实现（零依赖，就是一个 JSON 文件）。它只做两件事：把值得留的话挑出来存盘，下次开场接在 system prompt **后面**（接前面会被后面的人设段压过去，模型就当背景音了）。
+
+```python
+from memory import Memory, append_to_prompt
+
+mem = Memory(persona_id, user_id)
+mem.observe(user_text)                       # 挑值得记的存下
+system = append_to_prompt(base_prompt, mem)  # 下次开场带上
+```
+
+抽取规则**故意做得很笨**（只认明确的时间、事件、身体状况），因为宁可漏记，也不要记一堆没用的把 prompt 塞满。它也**知道该说不知道**——问「记得我生日吗」而它没记过，它会说「你没说过」，不会编一个。你可以整套换掉 `extract()`，接口只有两个函数。
 
 ---
 
